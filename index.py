@@ -115,3 +115,82 @@ def handle_voice_command():
     elif "exit" in command:
         speak("Goodbye!")
         root.destroy()
+
+# Background listener for voice commands
+def voice_command_listener():
+    while True:
+        handle_voice_command()
+
+
+# Update song info in the GUI
+def update_song_info(title, artist):
+    song_title_label.config(text=title)
+    artist_label.config(text=f"- {artist} -")
+
+
+# Update playback status in the GUI
+def update_status(new_status):
+    status_label.config(text=f"Status: {new_status}")
+
+
+# Update the volume
+def update_volume(val):
+    volume = int(val) / 100  # Scale value is from 0 to 100, convert to 0.0 to 1.0
+    mixer.music.set_volume(volume)
+
+
+# GUI Setup
+root = tk.Tk()
+root.title("Voice-Controlled Music Player")
+root.geometry("400x600")
+root.configure(bg="#f2f2f2")
+
+music_folder = "Music"  # Path to your music folder
+songs = load_songs(music_folder)  # Load all songs from the folder
+current_song = None
+current_song_index = -1  # Initialize to -1 to indicate no song is playing yet
+
+
+# Gradient background
+canvas = tk.Canvas(root, width=400, height=300,background="white")
+canvas.pack(fill="both", expand=True)
+
+small = tk.Canvas(canvas,width=390, height=290, background="black")
+small.pack()
+ya =tk.Canvas(canvas,width=370,height=270, background="purple")
+
+# Song Info
+song_title_label = tk.Label(root, text="Your Very Cool Song", font=("Arial", 16, "bold"), bg="#f2f2f2")
+song_title_label.pack(pady=10)
+
+artist_label = tk.Label(root, text="- Your Cool Band -", font=("Arial", 12), bg="#f2f2f2")
+artist_label.pack()
+
+# Playback Buttons
+button_frame = tk.Frame(root, bg="#f2f2f2")
+button_frame.pack(pady=20)
+
+pause_button = tk.Button(button_frame, text="Pause", width=8, command=pause_music)
+pause_button.grid(row=0, column=0, padx=5)
+
+stop_button = tk.Button(button_frame, text="Stop", width=8, command=stop_music)
+stop_button.grid(row=0, column=1, padx=5)
+
+continue_button = tk.Button(button_frame, text="Continue", width=8, command=continue_music)
+continue_button.grid(row=0, column=2, padx=5)
+
+next_button = tk.Button(button_frame, text="Next", width=8, command=play_next_song)
+next_button.grid(row=0, column=3, padx=5)
+
+# Progress Bar
+progress = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+progress.pack(pady=10)
+
+# Volume Control Slider (Cable-like UI)
+volume_slider = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=update_volume)
+volume_slider.set(50)  # Default volume is 50%
+volume_slider.pack(pady=10)
+
+# Status Label
+status_label = tk.Label(root, text="Status: Stopped", font=("Arial", 12), bg="#f2f2f2")
+status_label.pack(pady=10)
