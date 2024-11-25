@@ -194,3 +194,12 @@ volume_slider.pack(pady=10)
 # Status Label
 status_label = tk.Label(root, text="Status: Stopped", font=("Arial", 12), bg="#f2f2f2")
 status_label.pack(pady=10)
+
+# Start background voice listener
+speak("Welcome to the voice-controlled music player.")
+speak(f"I found {len(songs)} songs in your library.")
+listener_thread = threading.Thread(target=voice_command_listener, daemon=True)
+listener_thread.start()
+
+# Mainloop
+root.mainloop()
