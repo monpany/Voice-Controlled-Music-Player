@@ -39,6 +39,8 @@ def find_song(song_name, songs):
         if song_name in song.lower():
             return song
     return None
+
+
 # Function play music
 def play_music(file_path=None):
     global current_song
@@ -92,7 +94,6 @@ def play_next_song():
         speak("No songs in the library.")
 
 
-
 def handle_voice_command():
     command = listen()
     if "play" in command:
@@ -116,6 +117,40 @@ def handle_voice_command():
         speak("Goodbye!")
         root.destroy()
 
+
+#function control song(cable)
+# Function to update progress bar as the song plays
+def update_progress():
+    if mixer.get_init() and mixer.music.get_busy():  # Check if a song is playing
+        current_time = mixer.music.get_pos() / 1000  # Get current position in seconds
+        progress["value"] = (current_time / song_duration) * 100  # Update progress bar
+        root.after(1000, update_progress)  # Repeat every second
+
+# Function to set playback position based on slider
+def set_playback_position(event):
+    if mixer.get_init():
+        position = progress.get() / 100 * song_duration  # Get position in seconds
+        mixer.music.set_pos(position)  # Seek to position
+
+# Play music with duration tracking
+def play_music(file_path=None):
+    global current_song, song_duration
+    if file_path:
+        mixer.init()
+        mixer.music.load(file_path)
+        mixer.music.play()
+        current_song = file_path
+        song_duration = mixer.Sound(file_path).get_length()  # Get song duration in seconds
+        update_status("Playing")
+        update_song_info(os.path.basename(file_path).replace(".mp3", ""), "Unknown Artist")
+        update_progress()  # Start updating the progress bar
+    elif current_song:
+        mixer.music.play()
+        update_status("Playing")
+        update_progress()
+    else:
+        speak("No song selected.")
+        
 # Background listener for voice commands
 def voice_command_listener():
     while True:
@@ -155,9 +190,27 @@ current_song_index = -1  # Initialize to -1 to indicate no song is playing yet
 canvas = tk.Canvas(root, width=400, height=300,background="white")
 canvas.pack(fill="both", expand=True)
 
-small = tk.Canvas(canvas,width=390, height=290, background="black")
+# small = tk.Canvas(canvas,width=390, height=290, background="black")
+# small.pack()
+# ya =tk.Canvas(canvas,width=370,height=270, background="purple")
+
+# Image
+from PIL import Image, ImageTk
+# Replace the "small" canvas setup with an image
+small = tk.Canvas(canvas, width=390, height=290, background="black")
 small.pack()
-ya =tk.Canvas(canvas,width=370,height=270, background="purple")
+
+# Load and resize the image
+image_path = r"images\bg3.png"  # Path to your image 
+raw_image = Image.open(image_path)
+resized_image = raw_image.resize((390, 290))  # Resize to fit the canvas
+image = ImageTk.PhotoImage(resized_image)
+
+# Add the image to the canvas
+small.create_image(0, 0, anchor="nw", image=image)
+
+# Keep a reference to avoid garbage collection
+small.image = image
 
 # Song Info
 song_title_label = tk.Label(root, text="Your Very Cool Song", font=("Arial", 16, "bold"), bg="#f2f2f2")
@@ -182,8 +235,13 @@ continue_button.grid(row=0, column=2, padx=5)
 next_button = tk.Button(button_frame, text="Next", width=8, command=play_next_song)
 next_button.grid(row=0, column=3, padx=5)
 
-# Progress Bar
-progress = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+# # Progress Bar
+# progress = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+# progress.pack(pady=10)
+
+progress = ttk.Scale(
+    root, orient="horizontal", length=300, from_=0, to=100, command=set_playback_position
+)
 progress.pack(pady=10)
 
 # Volume Control Slider (Cable-like UI)
